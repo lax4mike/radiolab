@@ -20,18 +20,38 @@ public class RadiolabScraper {
 	
 	public void run() {
 		
-		int i = 0;
+		int[] getTheseSeason = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+		
+		
+		for (int getThis : getTheseSeason) {
+			
+			this.getRadioLabSeason(getThis);
+			
+		}
+		
+	}
+	
+	protected void getRadioLabSeason(int season){
+		
 		try {
+			
+			int i = 0;
 			Document doc = Jsoup.connect("http://www.radiolab.org/archive/").get();
 			
 			Elements seasons = doc.select(".interior-lead");
 						
 			for (Element s : seasons) {
 				
-				String season = s.select("h1").first().text();
+				String seasonString = s.select("h1").first().text();
+				int seasonNum = Integer.parseInt(seasonString.replaceAll("\\D", ""));
+				
+				if (seasonNum != season){
+					continue;
+				}
+						
 				Elements episodes = s.select("#radiolab-archive-list li");
 				
-//				System.out.println(season);
+				// System.out.println(season);
 				
 				for (Element e : episodes) {
 
@@ -53,11 +73,9 @@ public class RadiolabScraper {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 
-	public void getRadioLabEpisode(String href) {
+	protected void getRadioLabEpisode(String href) {
 		
 		try {
 			Document doc = Jsoup.connect(href).get();
@@ -70,7 +88,10 @@ public class RadiolabScraper {
 			String episode = seArray[1].replaceAll("[^0-9]", "");
 			String title = doc.select(".story-headergroup h2.title").text();
 			
-			String filepath = "Downloaded\\Season " + season + "\\";			
+			String filepath = "Downloaded";
+			filepath += File.separator;
+			filepath += "Season " + season;
+			filepath += File.separator;			
 			
 			
 			String filename = season;
@@ -81,15 +102,12 @@ public class RadiolabScraper {
 			
 			// escape chars for windows filename:
 			
-			String newfilename = this.getValidFileName(filename);
-			
+			filename = this.getValidFileName(filename);
 			
 			// download file
 			String xmlDocUrl = doc.select(".inline_audioplayer_wrapper").first().select(".player_element").first().attr("data-url");
 			Document xmlDoc = Jsoup.connect(xmlDocUrl).get();
 			String downloadLink = xmlDoc.select("location").text();
-			
-			System.out.println();
 			
 			URL downloadUrl = new URL(downloadLink);
 			File saveFile = new File(filepath+filename);
